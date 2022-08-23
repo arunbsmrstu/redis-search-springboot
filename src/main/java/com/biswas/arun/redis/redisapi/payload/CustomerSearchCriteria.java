@@ -18,12 +18,9 @@ import java.util.Date;
 @Getter
 public class CustomerSearchCriteria extends Criteria implements Serializable {
     private Long id;
-    @Like
     private String fullName;
     private String email;
     private String mobile;
-    @FromDate
-    private Date startCreateAt;
-    @ToDate
-    private Date endCreateAt;
+    private String startCreateAt;
+    private String endCreateAt;
 }

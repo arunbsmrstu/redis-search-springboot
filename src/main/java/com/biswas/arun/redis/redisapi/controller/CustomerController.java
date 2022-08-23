@@ -64,7 +64,7 @@ public class CustomerController {
 
         SearchResults<String, String> results = commands.search(searchIndexName, query);
 
-        customerRedisDao.search(query,1);
+//        customerRedisDao.search(query,1);
 
 //        System.out.println(new Gson().toJson(results));
 //        results.forEach(test -> {
