@@ -2,6 +2,9 @@ package com.biswas.arun.redis.redisapi.common.utils;
 
 import com.biswas.arun.redis.redisapi.common.annotation.ToUpper;
 import com.biswas.arun.redis.redisapi.common.enums.ErrorCode;
+import com.biswas.arun.redis.redisapi.common.payload.Link;
+import com.biswas.arun.redis.redisapi.common.payload.Pagination;
+import com.biswas.arun.redis.redisapi.common.payload.Payload;
 import com.biswas.arun.redis.redisapi.common.payload.ServiceError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -2570,5 +2573,88 @@ public class Utils {
         byte[] bytes = baos.toByteArray();
         baos.close();
         return bytes;
+    }
+
+
+    public static Payload pagination(Integer page,Integer itemCount,Integer items_per_page){
+        Integer skip = (page - 1) * items_per_page;
+        Integer from = skip + 1;
+        Integer to = skip + items_per_page;
+        List<Link> links = new ArrayList<>();
+        List<Link> templist = new ArrayList<>();
+        Integer label = page;
+        Integer page_no = null;
+        boolean active = false;
+        Integer active_index = page - 1;
+        String url="/?page=";
+        String first_page_url=null;
+        Integer last_page=null;
+        String next_page_url=null;
+        String prev_page_url=null;
+
+    Double pageCount = Math.ceil(itemCount / items_per_page);
+        for (Integer i = 1; i <= pageCount.intValue(); i++) {
+            label = i;
+            page_no = i;
+            active = false;
+            if (i == page) {
+                active = true;
+                active_index = i - 1;
+                first_page_url=url+i;
+            }
+            last_page=i;
+            templist.add(Link.builder().url(url+i).label(i.toString()).page(i).active(active).build());
+        }
+
+        Link prev = Link.builder().build();
+        prev.setLabel("&laquo; Previous");
+        if (active_index > 0) {
+            prev_page_url=url+active_index;
+            prev.setUrl(url+active_index);
+            prev.setPage(active_index);
+            prev.setActive(false);
+        } else {
+            prev.setPage(null);
+            prev.setActive(false);
+        }
+        links.add(prev);
+
+        templist.forEach(link -> {
+            links.add(link);
+        });
+
+
+        Link next = Link.builder().label("Next &raquo;").build();
+
+        if (!Utils.isOk(links.get(active_index + 2))){
+            next.setPage(null);
+        } else{
+            next.setPage(links.get(active_index + 2).getPage());
+            next.setUrl(url+links.get(active_index + 2).getPage());
+            next_page_url=url+links.get(active_index + 2).getPage();
+        }
+
+        next.setActive(false);
+        links.add(next);
+
+        if (page <= pageCount) {
+            return Payload.builder().pagination(Pagination.builder()
+                    .page(page)
+                    .from(from)
+                    .to(to)
+                    .items_per_page(items_per_page)
+                    .total(itemCount)
+                    .links(links)
+                    .first_page_url(first_page_url)
+                    .next_page_url(next_page_url)
+                    .prev_page_url(prev_page_url)
+                    .last_page(last_page)
+            .build()).build();
+        } else {
+            return Payload.builder().pagination(Pagination.builder()
+                    .err(" queried page "+ page + " is > to maximum page number " + pageCount)
+                    .links(links)
+                    .build()).build();
+        }
     }
 }
